@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Routes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+    <style>
+        /* Additional styles for the navbar */
+        .navbar {
+            background: rgba(0, 0, 0, 0.5);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            padding: 10px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar .company {
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar img {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .navbar a {
+            color: #fff;
+            margin: 0 15px;
+            text-decoration: none;
+        }
+
+        .navbar a:hover {
+            color: #5cb85c;
+        }
+
+        .hidden {
+            top: -60px;
+        }
+
+        .container {
+            margin-top: 60px;
+            text-align: center;
+            color: #fff;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        h2 {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            border-right: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        td:last-child, th:last-child {
+            border-right: none;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .logo {
+            width: 45px;
+            height: 45px;
+            border-radius: 90%;
+            object-fit: cover;
+        }
+
+        .book-btn {
+            background-color: #5cb85c;
+            color: white;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        .book-btn:hover {
+            background-color: #4cae4c;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .navbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .navbar a {
+                margin: 5px 0;
+            }
+
+            .container {
+                width: 95%;
+            }
+
+            table {
+                font-size: 14px; /* Smaller font for mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="user-home">
+        <nav class="navbar" id="navbar">
+            <div class="company">
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Company Logo" class="logo">
+                <span>The Getaway Bus</span>
+            </div>
+            <div>
+                <a href="/book-bus">Book Ticket</a>
+                <a href="/my-bookings">My Bookings</a>
+                <a href="/profile">Profile</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </nav>
+        
+        <div class="container">
+            <h2>Available Routes and Buses</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Route</th>
+                        <th>Bus</th>
+                        <th>Departure Time</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for route in routes %}
+                    <tr>
+                        <td>{{ route[1] }}</td>
+                        <td>{{ route[2] }}</td>
+                        <td>{{ route[3] }}</td>
+                        <td>${{ route[4] }}</td>
+                        <td><a href="/book/available-seats/{{ route[0] }}" class="book-btn">Book</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript for scrolling effect
+        let lastScrollTop = 0;
+        const navbar = document.getElementById('navbar');
+
+        window.addEventListener('scroll', function() {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop) {
+                navbar.classList.add('hidden');
+            } else {
+                navbar.classList.remove('hidden');
+            }
+            lastScrollTop = scrollTop;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Seats</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+    <style>
+        /* Your CSS styling */
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .navbar {
+            background: rgba(0, 0, 0, 0.5);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            padding: 10px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar .company {
+            display: flex;
+            align-items: center;
+        }
+        .navbar img {
+            height: 40px;
+            margin-right: 10px;
+        }
+        .navbar a {
+            color: #fff;
+            margin: 0 15px;
+            text-decoration: none;
+        }
+        .navbar a:hover {
+            color: #5cb85c;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 80px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        #seats-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            width: 100%;
+        }
+        .seat {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #333;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .available {
+            background-color: #4CAF50;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .available:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        .booked {
+            background-color: #A9A9A9;
+            color: white;
+            cursor: not-allowed;
+        }
+        .back-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #5cb85c;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            width: 250px;
+        }
+        .back-button:hover {
+            background-color: #4cae4c;
+        }
+
+        .logo {
+            width: 45px; /* Adjust size as needed */
+            height: 45px; /* Adjust size as needed */
+            border-radius: 90%; /* This makes the image round */
+            object-fit: cover; /* Ensures the image covers the area without distortion */
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="company">
+            <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Company Logo" class="logo">
+            <span>The Getaway Bus</span>
+        </div>
+        <div>
+            <a href="/book-bus">Book Ticket</a>
+            <a href="/my-bookings">My Bookings</a>
+            <a href="/profile">Profile</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2>Available Seats for Bus: {{ route_name }}</h2>
+        <div id="seats-container">
+            {% for seat in seats %}
+                <div class="seat {{ 'available' if seat.available else 'booked' }}" 
+                     data-seat-number="{{ seat.number }}">
+                    {{ seat.number }}
+                </div>
+            {% endfor %}
+        </div>
+        <a href="{{ url_for('book_bus') }}" class="back-button">Back to Booking</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAvailableSeats();
+
+            const seats = document.querySelectorAll('.seat');
+            seats.forEach(seat => {
+                seat.addEventListener('click', () => {
+                    const seatNumber = seat.getAttribute('data-seat-number');
+                    const routeId = '{{ route_id }}';
+
+                    // Confirm booking
+                    if (confirm(`Are you sure you want to book seat ${seatNumber}?`)) {
+                        bookSeat(seatNumber, routeId);
+                    }
+                });
+            });
+        });
+
+        function loadAvailableSeats() {
+            // Corrected URL to include route_id parameter
+            const routeId = '{{ route_id }}';
+            fetch(`/book/available-seats/${routeId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Update seat availability based on response data
+                data.seats.forEach(seat => {
+                    const seatElement = document.querySelector(`.seat[data-seat-number="${seat.number}"]`);
+                    if (seatElement) {
+                        seatElement.classList.remove('available', 'booked'); // Clear previous classes
+                        if (seat.available) {
+                            seatElement.classList.add('available');
+                        } else {
+                            seatElement.classList.add('booked');
+                        }
+                    }
+                });
+            })
+        }
+
+        function bookSeat(seatNumber, routeId) {
+            fetch('/book-seat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ seat_number: seatNumber, route_id: routeId })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(data.message);
+                loadAvailableSeats(); // Refresh the seat availability after booking
+            })
+            .catch(error => {
+                console.error('Error booking the seat:', error);
+                alert('There was an error booking the seat. Please try again.');    
+            });
+        }
+    </script>
+</body>
+</html>
